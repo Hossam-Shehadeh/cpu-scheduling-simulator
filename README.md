@@ -102,9 +102,18 @@ Every process gets a fixed **time quantum** on the CPU. When time is up, it goes
 ```
 Quantum = 4
 
-  P1   P2   P3   P1   P1   P1   P1   P1
-[────][───][───][────][────][────][────][────]
-0    4    7   10   14   18   22   26   30
+ Slice:   1    2    3    4    5    6    7    8
+         ┌────┬────┬────┬────┬────┬────┬────┬────┐
+  CPU:   │ P1 │ P2 │ P3 │ P1 │ P1 │ P1 │ P1 │ P1 │
+         └────┴────┴────┴────┴────┴────┴────┴────┘
+ Time:   0    4    7   10   14   18   22   26   30
+         ↑         ↑    ↑
+      P1 first   P2   P3
+      preempted  done done
+
+  P1 remaining:  24 → 20 → 20 → 20 → 16 → 12 → 8 → 4 → 0  ✓
+  P2 remaining:   3 →  3 →  0  ✓
+  P3 remaining:   3 →  3 →  3 →  0  ✓
 ```
 
 | ✅ Pros | ❌ Cons |
@@ -222,26 +231,125 @@ Blank lines and `#` comments are skipped.
 
 ## 📟 Sample Terminal Output
 
+<details>
+<summary><b>▶ Click to expand — FCFS output</b></summary>
+
 ```
 ========================
 --- FCFS ---
 ========================
+
+Execution Trace:
+[Time  0] Process 1 started
+[Time 24] Process 1 finished
+[Time 24] Process 2 started
+[Time 27] Process 2 finished
+[Time 27] Process 3 started
+[Time 30] Process 3 finished
+
 Gantt Chart:
 +----------------------------+---------+---------+
 |             P1             |   P2    |   P3    |
 |            d=24            |   d=3   |   d=3   |
 +----------------------------+---------+---------+
+|----------------------------|---------|---------|----
 0                            24        27        30
 
 Metrics Table:
 PID   AT    BT    CT    TT    WT
 1     0     24    24    24    0
-2     1     3     27    26    23
-3     2     3     30    28    25
+2     1      3    27    26    23
+3     2      3    30    28    25
 
 Average Turnaround Time: 26.00
 Average Waiting Time:    16.00
 ```
+
+</details>
+
+<details>
+<summary><b>▶ Click to expand — SJF output</b></summary>
+
+```
+========================
+--- SJF ---
+========================
+
+Execution Trace:
+[Time  0] Process 1 started        ← P1 is the only one here at t=0
+[Time 24] Process 1 finished
+[Time 24] Process 2 started        ← P2 burst=3, chosen over P3 burst=3 (same, picks lower PID)
+[Time 27] Process 2 finished
+[Time 27] Process 3 started
+[Time 30] Process 3 finished
+
+Gantt Chart:
++----------------------------+---------+---------+
+|             P1             |   P2    |   P3    |
+|            d=24            |   d=3   |   d=3   |
++----------------------------+---------+---------+
+|----------------------------|---------|---------|----
+0                            24        27        30
+
+Metrics Table:
+PID   AT    BT    CT    TT    WT
+1     0     24    24    24    0
+2     1      3    27    26    23
+3     2      3    30    28    25
+
+Average Turnaround Time: 26.00
+Average Waiting Time:    16.00
+
+  ⚠ Same result as FCFS here because P1 is the only
+    process available at t=0 — SJF has no choice.
+```
+
+</details>
+
+<details>
+<summary><b>▶ Click to expand — Round Robin output (q=4)</b></summary>
+
+```
+========================
+--- RR (quantum=4) ---
+========================
+
+Execution Trace:
+[Time  0] Process 1 started
+[Time  4] Process 1 preempted      ← used its full quantum, back to queue
+[Time  4] Process 2 started
+[Time  7] Process 2 finished       ← only needed 3 ticks, done!
+[Time  7] Process 3 started
+[Time 10] Process 3 finished       ← only needed 3 ticks, done!
+[Time 10] Process 1 resumed
+[Time 14] Process 1 preempted
+[Time 14] Process 1 resumed
+[Time 18] Process 1 preempted
+[Time 18] Process 1 resumed
+[Time 22] Process 1 preempted
+[Time 22] Process 1 resumed
+[Time 26] Process 1 preempted
+[Time 26] Process 1 resumed
+[Time 30] Process 1 finished       ← finally done after 6 turns
+
+Gantt Chart:
++------+-----+-----+------+------+------+------+------+
+|  P1  |  P2 |  P3 |  P1  |  P1  |  P1  |  P1  |  P1  |
+| d=4  | d=3 | d=3 | d=4  | d=4  | d=4  | d=4  | d=4  |
++------+-----+-----+------+------+------+------+------+
+0      4     7    10     14     18     22     26     30
+
+Metrics Table:
+PID   AT    BT    CT    TT    WT
+1     0     24    30    30     6     ← waited only 6 units total
+2     1      3     7     6     3     ← finished super early!
+3     2      3    10     8     5     ← finished super early!
+
+Average Turnaround Time: 14.67     ← 11 units better than FCFS/SJF
+Average Waiting Time:     4.67     ← 11 units better than FCFS/SJF
+```
+
+</details>
 
 ---
 
