@@ -17,16 +17,15 @@
 [![Build](https://img.shields.io/badge/Build-Makefile%20%7C%20CMake-4CAF50?style=for-the-badge&logo=cmake&logoColor=white)](Makefile)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=for-the-badge&logo=linux&logoColor=white)]()
 [![Standard](https://img.shields.io/badge/Standard-C%2B%2B17-blue?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 <br/>
 
-> A blazing-fast, terminal-powered **CPU scheduling simulator** that implements  
-> three classic OS scheduling algorithms — with Gantt chart output and performance metrics.
+> A terminal-powered **CPU scheduling simulator** written in C++ that runs three classic OS algorithms side-by-side,
+> prints full Gantt charts, and spits out every metric you need — all from a single command.
 
 <br/>
 
-[📖 About](#-about) • [🚀 Features](#-features) • [🧠 Algorithms](#-algorithms) • [⚙️ Build](#%EF%B8%8F-build--run) • [📋 Usage](#-usage) • [📁 Structure](#-project-structure) • [📜 License](#-license)
+[📖 About](#-about) • [🚀 Features](#-features) • [🧠 Algorithms](#-algorithms) • [⚙️ Build](#%EF%B8%8F-build--run) • [📋 Usage](#-usage) • [📊 Comparison](#-how-do-they-compare) • [📁 Structure](#-project-structure)
 
 </div>
 
@@ -34,26 +33,28 @@
 
 ## 📖 About
 
-This project was built as part of a university **Operating Systems** course assignment. It simulates how an OS kernel schedules processes onto the CPU using three fundamental scheduling strategies.
+I built this during my **Operating Systems** course to really *understand* scheduling — not just read about it. There's a big difference between memorizing "Round Robin gives fair CPU time" and watching P1 get preempted every 4 ticks while P2 and P3 slip through.
 
-The simulator reads a list of processes from a plain text file, runs all three algorithms, and outputs:
-- **Gantt chart** timeline for each algorithm
-- **Per-process metrics**: waiting time, turnaround time, response time
-- **Averages** for quick comparison across algorithms
+This simulator:
+- Reads a process list from a plain text file
+- Runs **FCFS**, **SJF**, and **Round Robin** on the same input
+- Prints a proper **Gantt chart** for each algorithm
+- Shows per-process **completion, turnaround, and waiting times**
+- Optionally exports an **interactive HTML Gantt chart**
 
 ---
 
 ## 🚀 Features
 
-| Feature | Details |
-|---|---|
-| 🔁 **3 Algorithms** | FCFS, SJF (non-preemptive), Round Robin |
-| 📊 **Gantt Charts** | ASCII timeline printed to terminal |
-| 📈 **Metrics** | Waiting, turnaround, and completion times |
-| 🌐 **HTML Output** | Optional interactive Gantt chart saved as `.html` |
-| 🛠️ **Dual Build** | Supports both `make` and `cmake` |
-| 💻 **Cross-Platform** | macOS, Linux, Windows (MSVC / MinGW) |
-| 📄 **File Input** | Clean `PID ArrivalTime BurstTime` format |
+| | Feature | What it does |
+|---|---|---|
+| 🔁 | **3 Algorithms** | FCFS, SJF (non-preemptive), Round Robin (preemptive) |
+| 📊 | **ASCII Gantt Charts** | Visual timeline printed right in your terminal |
+| 📈 | **Full Metrics** | Per-process WT, TT, CT — plus averages |
+| 🌐 | **HTML Export** | Save an interactive Gantt chart as `.html` |
+| 🛠️ | **Dual Build System** | Works with `make` or `cmake` — your choice |
+| 💻 | **Cross-Platform** | macOS, Linux, Windows (MSVC / MinGW) |
+| 📄 | **Simple Input Format** | One line per process: `PID ArrivalTime BurstTime` |
 
 ---
 
@@ -61,46 +62,56 @@ The simulator reads a list of processes from a plain text file, runs all three a
 
 ### 1️⃣ FCFS — First Come, First Served
 
-> Non-preemptive. Processes are executed in the order they arrive.
+The simplest one. Whoever shows up first, runs first. No interruptions.
 
 ```
-Timeline:  [ P1 (24) ][ P2 (3) ][ P3 (3) ]
-           0          24        27        30
+Timeline:  [ ──────── P1 (24) ──────── ][ P2 (3) ][ P3 (3) ]
+           0                            24         27        30
 ```
 
-- ✅ Simple and fair in arrival order  
-- ❌ Suffers from the **Convoy Effect** — short jobs wait behind long ones
+| ✅ Pros | ❌ Cons |
+|---|---|
+| Dead simple to implement | **Convoy Effect** — short jobs get stuck behind long ones |
+| Fair in arrival order | High average waiting time when burst times vary a lot |
 
 ---
 
 ### 2️⃣ SJF — Shortest Job First
 
-> Non-preemptive. The process with the shortest burst time runs next.
+Among all processes that have arrived, run the one with the **shortest burst time** next.
 
 ```
-Timeline:  [ P1 (24) ][ P3 (3) ][ P2 (3) ]
-           0          24        27        30
+Timeline:  [ ──────── P1 (24) ──────── ][ P2 (3) ][ P3 (3) ]
+           0                            24         27        30
 ```
 
-- ✅ Minimizes average waiting time  
-- ❌ Can cause **starvation** for long processes  
-- ❌ Requires knowing burst times in advance
+> **Note:** With this input, P1 arrives first and is already running when P2/P3 show up —
+> so SJF and FCFS produce the same schedule. Try a different input where a short job arrives before a long one starts!
+
+| ✅ Pros | ❌ Cons |
+|---|---|
+| Optimal average waiting time (theoretically) | Can **starve** long processes indefinitely |
+| Works well when burst times are predictable | Requires knowing burst time in advance |
 
 ---
 
 ### 3️⃣ RR — Round Robin
 
-> Preemptive. Each process gets a fixed time quantum before being preempted.
+Every process gets a fixed **time quantum** on the CPU. When time is up, it goes to the back of the queue.
 
 ```
 Quantum = 4
-Timeline:  [P1][P2][P3][P1][P1][P1][P1][P1]
-           0   4   7  10  14  18  22  26  30
+
+  P1   P2   P3   P1   P1   P1   P1   P1
+[────][───][───][────][────][────][────][────]
+0    4    7   10   14   18   22   26   30
 ```
 
-- ✅ Fair for all processes  
-- ✅ Good response time for interactive systems  
-- ❌ Higher context-switch overhead with small quantum
+| ✅ Pros | ❌ Cons |
+|---|---|
+| **Fair** — every process gets CPU time regularly | More context switches = more overhead |
+| Best **response time** for interactive workloads | Avg turnaround can be worse than SJF |
+| Quantum size lets you tune the trade-off | Choosing the right quantum is non-trivial |
 
 ---
 
@@ -108,28 +119,26 @@ Timeline:  [P1][P2][P3][P1][P1][P1][P1][P1]
 
 ### Prerequisites
 
-- C++17 compatible compiler (`g++`, `clang++`, or MSVC)
-- `make` **or** `cmake`
+- A C++17 compiler — `g++`, `clang++`, or MSVC
+- `make` **or** `cmake` (either works)
 
 ---
 
-### 🐧 macOS / Linux — Using `make`
+### 🍎 macOS / 🐧 Linux
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/cpu-scheduling-simulator.git
+# Clone
+git clone https://github.com/Hossam-Shehadeh/cpu-scheduling-simulator.git
 cd cpu-scheduling-simulator
 
-# Build
+# Build with make
 make
 
 # Run
 ./scheduler sample_input.txt 4
 ```
 
----
-
-### 🐧 macOS / Linux — Using `cmake`
+Or with CMake:
 
 ```bash
 cmake -S . -B build
@@ -137,7 +146,7 @@ cmake --build build
 ./build/scheduler sample_input.txt 4
 ```
 
-Or use the helper script:
+One-liner helper script:
 
 ```bash
 chmod +x run_mac.sh
@@ -146,7 +155,7 @@ chmod +x run_mac.sh
 
 ---
 
-### 🪟 Windows — Using CMake
+### 🪟 Windows
 
 ```bat
 cmake -S . -B build
@@ -154,7 +163,7 @@ cmake --build build --config Release
 build\Release\scheduler.exe sample_input.txt 4
 ```
 
-Or use the helper script:
+Or use the helper:
 
 ```bat
 run_windows.bat sample_input.txt 4
@@ -162,7 +171,7 @@ run_windows.bat sample_input.txt 4
 
 ---
 
-### 🧹 Clean Build
+### 🧹 Clean up
 
 ```bash
 make clean
@@ -178,28 +187,28 @@ make clean
 
 | Argument | Required | Description |
 |---|---|---|
-| `input_file` | ✅ | Path to process list (see format below) |
-| `time_quantum` | ✅ | Time slice for Round Robin (integer > 0) |
-| `html_output_file` | ❌ | Path to save interactive HTML Gantt chart |
+| `input_file` | ✅ | Path to your process list |
+| `time_quantum` | ✅ | Time slice for Round Robin (must be > 0) |
+| `html_output_file` | ❌ | If provided, saves an interactive HTML Gantt chart here |
 
-### Example
+**Examples:**
 
 ```bash
 ./scheduler sample_input.txt 4
-./scheduler sample_input.txt 4 gantt.html
+./scheduler sample_input.txt 2 output.html
 ```
 
 ---
 
-## 📄 Input File Format
+## 📄 Input Format
 
-Each line represents one process:
+One process per line:
 
 ```
 <PID>  <ArrivalTime>  <BurstTime>
 ```
 
-### Example — `sample_input.txt`
+**`sample_input.txt`:**
 
 ```
 1  0  24
@@ -207,43 +216,92 @@ Each line represents one process:
 3  2   3
 ```
 
-| Column | Description |
-|---|---|
-| `PID` | Unique process identifier |
-| `ArrivalTime` | When the process arrives in the ready queue |
-| `BurstTime` | Total CPU time the process needs |
-
-> Lines starting with `#` and blank lines are ignored.
+Blank lines and `#` comments are skipped.
 
 ---
 
-## 📊 Sample Output
+## 📟 Sample Terminal Output
 
 ```
-============================================================
- FCFS — First Come, First Served
-============================================================
+========================
+--- FCFS ---
+========================
 Gantt Chart:
-| P1 | P2 | P3 |
-0    24   27   30
++----------------------------+---------+---------+
+|             P1             |   P2    |   P3    |
+|            d=24            |   d=3   |   d=3   |
++----------------------------+---------+---------+
+0                            24        27        30
 
-PID   Arrival  Burst  Completion  Turnaround  Waiting
-  1        0     24          24          24        0
-  2        1      3          27          26       23
-  3        2      3          30          28       25
+Metrics Table:
+PID   AT    BT    CT    TT    WT
+1     0     24    24    24    0
+2     1     3     27    26    23
+3     2     3     30    28    25
 
-Average Turnaround Time : 26.00
-Average Waiting Time    :  16.00
+Average Turnaround Time: 26.00
+Average Waiting Time:    16.00
+```
 
-============================================================
- SJF — Shortest Job First
-============================================================
-...
+---
 
-============================================================
- Round Robin (Quantum = 4)
-============================================================
-...
+## 📊 How Do They Compare?
+
+Using `sample_input.txt` with `quantum = 4`:
+
+```
+                    FCFS     SJF      Round Robin (q=4)
+                 ┌──────────────────────────────────────────┐
+Avg Wait  (WT)   │  16.00   ████████████████████            │
+                 │  16.00   ████████████████████            │
+                 │   4.67   ██████                ← winner  │
+                 └──────────────────────────────────────────┘
+
+                    FCFS     SJF      Round Robin (q=4)
+                 ┌──────────────────────────────────────────┐
+Avg Turn  (TT)   │  26.00   ██████████████████████████      │
+                 │  26.00   ██████████████████████████      │
+                 │  14.67   ███████████████       ← winner  │
+                 └──────────────────────────────────────────┘
+```
+
+| Metric | 🐢 FCFS | 🎯 SJF | 🔄 Round Robin (q=4) |
+|---|:---:|:---:|:---:|
+| **Avg Waiting Time** | 16.00 | 16.00 | **4.67** ✅ |
+| **Avg Turnaround Time** | 26.00 | 26.00 | **14.67** ✅ |
+| Preemptive? | ❌ | ❌ | ✅ |
+| Starvation Risk | Low | ⚠️ High | None |
+| Best for | Batch jobs | Short predictable tasks | Interactive / time-sharing |
+
+> **Why does RR win here?** P1 has a massive burst (24 units). FCFS and SJF both let it hog the CPU before P2 and P3 get a turn. RR breaks P1 into 4-unit slices, letting P2 finish at t=7 and P3 at t=10 — dramatically cutting their waiting time.
+
+---
+
+## 🧩 How It Works Inside
+
+```
+main.cpp
+   │
+   ├── readProcessesFromFile()      parse input file → vector<Process>
+   │
+   └── runAll()
+         ├── runFCFS()              sort by arrival_time → run in order
+         ├── runSJF()               at each step, pick lowest burst_time among arrived
+         └── runRR()                ready queue + countdown per quantum
+               │
+               └── printMetrics()  TT = CT - AT,  WT = TT - BT,  print table + avg
+```
+
+Each `Process` carries:
+- **Input:** `pid`, `arrival_time`, `burst_time`
+- **Runtime:** `remaining_time` (decremented each tick in RR)
+- **Output:** `completion_time` (stamped when process finishes)
+
+Metric formulas:
+
+```
+Turnaround Time  =  Completion Time  −  Arrival Time
+Waiting Time     =  Turnaround Time  −  Burst Time
 ```
 
 ---
@@ -253,89 +311,28 @@ Average Waiting Time    :  16.00
 ```
 cpu-scheduling-simulator/
 │
-├── 📄 main.cpp            ← Entry point, argument parsing
-├── 📄 scheduler.h         ← Algorithm declarations
-├── 📄 scheduler.cpp       ← FCFS, SJF, RR implementations + Gantt output
-├── 📄 process.h           ← Process struct definition
-├── 📄 process.cpp         ← Process file I/O utilities
+├── main.cpp              entry point, argument parsing, error handling
+├── scheduler.h           function declarations for all three algorithms
+├── scheduler.cpp         FCFS, SJF, RR logic + Gantt chart printer
+├── process.h             Process struct (pid, AT, BT, CT, remaining)
+├── process.cpp           file reader → parses lines into Process objects
 │
-├── 🛠️ Makefile            ← Simple make build
-├── 🛠️ CMakeLists.txt      ← Cross-platform CMake build
+├── Makefile              quick build: just run  make
+├── CMakeLists.txt        cross-platform build for Windows/macOS/Linux
 │
-├── 📋 sample_input.txt    ← Sample 3-process test case
-├── 🌐 gantt_visual.html   ← Example HTML Gantt output
+├── sample_input.txt      3-process test case to get you started
+├── gantt_visual.html     pre-generated HTML Gantt chart example
 │
-├── 🏃 run_mac.sh          ← macOS one-command build & run
-└── 🏃 run_windows.bat     ← Windows one-command build & run
+├── run_mac.sh            one-command script for macOS
+└── run_windows.bat       one-command script for Windows
 ```
-
----
-
-## 🔬 Algorithm Comparison (Sample Input)
-
-Using `sample_input.txt` with time quantum = 4:
-
-| Metric | FCFS | SJF | Round Robin (q=4) |
-|---|---|---|---|
-| Avg. Waiting Time | 16.00 | 3.00 | 17.67 |
-| Avg. Turnaround Time | 26.00 | 13.00 | 27.67 |
-| Avg. Response Time | 16.00 | 3.00 | 0.00 |
-
-> **SJF wins** on average waiting time when burst times are known.  
-> **Round Robin** shines on response time — great for interactive workloads.
-
----
-
-## 🧩 How It Works — Internals
-
-```
-main.cpp
-   │
-   ├── readProcessesFromFile()   ← parse input → vector<Process>
-   │
-   └── runAll()
-         ├── runFCFS()           ← sort by arrival → sequential execution
-         ├── runSJF()            ← sort by burst_time among arrived processes
-         └── runRR()             ← queue-based round-robin with time quantum
-               │
-               └── printMetrics()  ← calculate & display stats per algorithm
-```
-
-Each `Process` tracks:
-- `arrival_time`, `burst_time` (input)
-- `remaining_time` (used by RR)
-- `completion_time` (computed during simulation)
-
-Derived metrics are calculated as:
-$$\text{Turnaround} = \text{Completion} - \text{Arrival}$$
-$$\text{Waiting} = \text{Turnaround} - \text{Burst}$$
-
----
-
-## 🤝 Contributing
-
-Contributions and improvements are welcome!
-
-1. Fork this repo
-2. Create a branch: `git checkout -b feature/your-feature`
-3. Commit: `git commit -m "feat: add your feature"`
-4. Push: `git push origin feature/your-feature`
-5. Open a Pull Request 🚀
-
----
-
-## 📜 License
-
-This project is licensed under the **MIT License** — free to use, modify, and distribute.
 
 ---
 
 <div align="center">
 
-Made with ❤️ and lots of ☕ for an Operating Systems course.
-
 *"An OS without a scheduler is just a very expensive paperweight."*
 
-⭐ **Star this repo if it helped you!** ⭐
+⭐ **If this helped you understand scheduling, drop a star!** ⭐
 
 </div>
