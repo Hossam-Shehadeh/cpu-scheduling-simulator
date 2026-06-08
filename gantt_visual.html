@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CPU Scheduling Visualization</title>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --ink: #1b2733;
+      --muted: #607080;
+      --accent: #1f7a8c;
+      --border: #d8e1ea;
+    }
+    body {
+      margin: 0;
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top left, #ffffff, var(--bg));
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px 24px;
+    }
+    .hero {
+      background: linear-gradient(135deg, #0d3b66, #1f7a8c);
+      color: #fff;
+      border-radius: 16px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(13, 59, 102, 0.18);
+    }
+    .hero h1 { margin: 0; font-size: 1.5rem; }
+    .hero p { margin: 6px 0 0; color: #dce8f5; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .card h3 { margin: 0 0 6px; color: var(--accent); }
+    .metric { margin: 3px 0; color: var(--muted); }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 12px;
+      padding: 10px;
+    }
+    .chart-title { margin: 4px 0 8px 2px; font-weight: 700; color: #0d3b66; }
+    .chart { width: 100%; height: 230px; }
+    .note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>CPU Scheduling Timeline Dashboard</h1>
+      <p>Visual Gantt charts generated from your simulator (Google Charts Timeline).</p>
+    </div>
+
+    <div class="cards">
+      <div class="card"><h3>FCFS</h3><div class="metric">Avg TT: 28.00</div><div class="metric">Avg WT: 20.60</div></div>
+      <div class="card"><h3>SJF</h3><div class="metric">Avg TT: 27.00</div><div class="metric">Avg WT: 19.60</div></div>
+      <div class="card"><h3>RR</h3><div class="metric">Avg TT: 16.40</div><div class="metric">Avg WT: 9.00</div></div>
+    </div>
+
+    <div class="chart-card"><div class="chart-title">FCFS</div><div id="chart_fcfs" class="chart"></div></div>
+    <div class="chart-card"><div class="chart-title">SJF</div><div id="chart_sjf" class="chart"></div></div>
+    <div class="chart-card"><div class="chart-title">Round Robin</div><div id="chart_rr" class="chart"></div></div>
+
+    <div class="note">Tip: Idle periods are shown as the row label <b>Idle</b>. Time values are simulation units.</div>
+  </div>
+
+  <script>
+    const fcfsRows = [
+        ["P1", 0, 24],
+        ["P2", 24, 27],
+        ["P3", 27, 30],
+        ["P4", 30, 35],
+        ["P5", 35, 37]
+    ];
+    const sjfRows = [
+        ["P1", 0, 24],
+        ["P5", 24, 26],
+        ["P2", 26, 29],
+        ["P3", 29, 32],
+        ["P4", 32, 37]
+    ];
+    const rrRows = [
+        ["P1", 0, 4],
+        ["P2", 4, 7],
+        ["P3", 7, 10],
+        ["P4", 10, 14],
+        ["P1", 14, 18],
+        ["P5", 18, 20],
+        ["P4", 20, 21],
+        ["P1", 21, 25],
+        ["P1", 25, 29],
+        ["P1", 29, 33],
+        ["P1", 33, 37]
+    ];
+
+    google.charts.load('current', { packages: ['timeline'] });
+    google.charts.setOnLoadCallback(drawAll);
+
+    function drawTimeline(containerId, rows) {
+      const container = document.getElementById(containerId);
+      const chart = new google.visualization.Timeline(container);
+      const data = new google.visualization.DataTable();
+      data.addColumn({ type: 'string', id: 'Process' });
+      data.addColumn({ type: 'string', id: 'Label' });
+      data.addColumn({ type: 'date', id: 'Start' });
+      data.addColumn({ type: 'date', id: 'End' });
+
+      data.addRows(rows.map((item) => [
+        item[0],
+        item[0],
+        new Date(item[1] * 1000),
+        new Date(item[2] * 1000)
+      ]));
+
+      chart.draw(data, {
+        timeline: { showRowLabels: true, showBarLabels: true },
+        avoidOverlappingGridLines: false
+      });
+    }
+
+    function drawAll() {
+      drawTimeline('chart_fcfs', fcfsRows);
+      drawTimeline('chart_sjf', sjfRows);
+      drawTimeline('chart_rr', rrRows);
+    }
+
+    window.addEventListener('resize', drawAll);
+  </script>
+</body>
+</html>

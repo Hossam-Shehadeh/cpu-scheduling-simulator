@@ -1,0 +1,52 @@
+# Compiled binary
+scheduler
+scheduler.exe
+
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.gen
+install_manifest.txt
+
+# Object files
+*.o
+*.obj
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/
+
+# CLion / JetBrains
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj.user
+Debug/
+Release/
+x64/
+x86/
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
+# HTML output (generated at runtime — optional to track)
+gantt_output*.html
