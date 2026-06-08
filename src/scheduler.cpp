@@ -551,7 +551,9 @@ vector<Process> readProcessesFromFile(const string& input_file) {
     string line;
 
     while (getline(file, line)) {
-        if (line.find_first_not_of(" \t\r\n") == string::npos) {
+        // skip blank lines and comment lines starting with '#'
+        const size_t first = line.find_first_not_of(" \t\r\n");
+        if (first == string::npos || line[first] == '#') {
             continue;
         }
 

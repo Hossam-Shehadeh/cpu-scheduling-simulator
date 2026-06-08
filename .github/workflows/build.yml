@@ -1,0 +1,56 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    name: Build on Ubuntu (g++)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with make
+        run: make
+
+      - name: Run basic example
+        run: ./scheduler examples/basic.txt 4
+
+      - name: Run convoy effect example
+        run: ./scheduler examples/convoy_effect.txt 4
+
+      - name: Run balanced example
+        run: ./scheduler examples/balanced.txt 3
+
+  build-macos:
+    name: Build on macOS (clang++)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with make
+        run: make
+
+      - name: Run basic example
+        run: ./scheduler examples/basic.txt 4
+
+      - name: Run starvation demo
+        run: ./scheduler examples/starvation_demo.txt 2
+
+  build-windows:
+    name: Build on Windows (MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure with CMake
+        run: cmake -S . -B build
+
+      - name: Build with CMake
+        run: cmake --build build --config Release
+
+      - name: Run basic example
+        run: build\Release\scheduler.exe examples\basic.txt 4

@@ -1,0 +1,13 @@
+# SJF Starvation Demo
+# P1 and P2 arrive first with long bursts.
+# Short processes P3-P6 keep arriving, and SJF always picks them
+# over P2, causing P2 to wait a very long time.
+# Compare P2's waiting time between FCFS and SJF.
+#
+# PID  ArrivalTime  BurstTime
+1      0            5
+2      0            20
+3      1            3
+4      2            3
+5      3            2
+6      4            2

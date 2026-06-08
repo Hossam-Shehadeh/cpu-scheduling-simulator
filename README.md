@@ -17,6 +17,7 @@
 [![Build](https://img.shields.io/badge/Build-Makefile%20%7C%20CMake-4CAF50?style=for-the-badge&logo=cmake&logoColor=white)](Makefile)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=for-the-badge&logo=linux&logoColor=white)]()
 [![Standard](https://img.shields.io/badge/Standard-C%2B%2B17-blue?style=for-the-badge)]()
+[![CI](https://github.com/Hossam-Shehadeh/cpu-scheduling-simulator/actions/workflows/build.yml/badge.svg)](https://github.com/Hossam-Shehadeh/cpu-scheduling-simulator/actions/workflows/build.yml)
 
 <br/>
 
@@ -143,8 +144,11 @@ cd cpu-scheduling-simulator
 # Build with make
 make
 
-# Run
-./scheduler sample_input.txt 4
+# Run the basic example
+./scheduler examples/basic.txt 4
+
+# Or: build + run in one command
+make run
 ```
 
 Or with CMake:
@@ -419,20 +423,68 @@ Waiting Time     =  Turnaround Time  −  Burst Time
 ```
 cpu-scheduling-simulator/
 │
-├── main.cpp              entry point, argument parsing, error handling
-├── scheduler.h           function declarations for all three algorithms
-├── scheduler.cpp         FCFS, SJF, RR logic + Gantt chart printer
-├── process.h             Process struct (pid, AT, BT, CT, remaining)
-├── process.cpp           file reader → parses lines into Process objects
+├── src/                       source files
+│   ├── main.cpp               entry point, argument parsing, error handling
+│   ├── scheduler.cpp          FCFS, SJF, RR algorithms + Gantt chart printer
+│   └── process.cpp            file reader → parses lines into Process objects
 │
-├── Makefile              quick build: just run  make
-├── CMakeLists.txt        cross-platform build for Windows/macOS/Linux
+├── include/                   headers
+│   ├── scheduler.h            function declarations for all three algorithms
+│   └── process.h              Process struct definition
 │
-├── sample_input.txt      3-process test case to get you started
-├── gantt_visual.html     pre-generated HTML Gantt chart example
+├── examples/                  ready-to-use input files
+│   ├── basic.txt              classic 3-process textbook example
+│   ├── convoy_effect.txt      one long job blocks many short ones (FCFS worst case)
+│   ├── starvation_demo.txt    short jobs keep starving a long one under SJF
+│   └── balanced.txt           varied burst times — all three algorithms differ
 │
-├── run_mac.sh            one-command script for macOS
-└── run_windows.bat       one-command script for Windows
+├── docs/                      in-depth references
+│   ├── algorithms.md          pseudocode, edge cases, and trade-off analysis
+│   └── metrics.md             how CT, TT, WT, RT are calculated
+│
+├── tests/
+│   └── run_tests.sh           automated test runner (10 tests, colour output)
+│
+├── .github/
+│   ├── workflows/build.yml    CI: builds on Ubuntu, macOS, and Windows on every push
+│   ├── ISSUE_TEMPLATE/        bug report + feature request forms
+│   └── pull_request_template.md
+│
+├── Makefile                   quick build: make / make run / make clean
+├── CMakeLists.txt             cross-platform build
+├── run_mac.sh                 one-command script for macOS (auto-detects cmake/make/g++)
+├── run_windows.bat            one-command script for Windows
+├── gantt_visual.html          pre-generated HTML Gantt chart example
+└── LICENSE
+```
+
+---
+
+## 🧭 Running the Test Suite
+
+```bash
+bash tests/run_tests.sh
+```
+
+Runs 10 automated checks against all four example inputs and validates error handling:
+
+```
+▶ Running tests...
+
+  ✓ PASS  basic.txt — FCFS avg waiting time
+  ✓ PASS  basic.txt — RR avg waiting time
+  ✓ PASS  basic.txt — FCFS section header present
+  ✓ PASS  basic.txt — SJF section header present
+  ✓ PASS  basic.txt — RR section header present
+  ✓ PASS  convoy_effect.txt — P1 completes at 50
+  ✓ PASS  balanced.txt — runs without error
+  ✓ PASS  starvation_demo.txt — runs without error
+  ✓ PASS  quantum=0 correctly rejected
+  ✓ PASS  quantum=-1 correctly rejected
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Results: 10 passed / 0 failed / 10 total
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---

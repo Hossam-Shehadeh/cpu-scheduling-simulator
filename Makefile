@@ -1,7 +1,8 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
-TARGET = scheduler
-SOURCES = main.cpp scheduler.cpp process.cpp
+CXX      = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic -Iinclude
+TARGET   = scheduler
+SRCDIR   = src
+SOURCES  = $(SRCDIR)/main.cpp $(SRCDIR)/scheduler.cpp $(SRCDIR)/process.cpp
 
 all: $(TARGET)
 
@@ -11,4 +12,7 @@ $(TARGET): $(SOURCES)
 clean:
 	rm -f $(TARGET)
 
-.PHONY: all clean
+run: $(TARGET)
+	./$(TARGET) examples/basic.txt 4
+
+.PHONY: all clean run

@@ -1,0 +1,12 @@
+# Balanced Workload
+# Processes arrive spread out with varied burst times.
+# All three algorithms produce meaningfully different results here.
+# Great for seeing the real trade-offs between FCFS, SJF, and RR.
+#
+# PID  ArrivalTime  BurstTime
+1      0            8
+2      1            4
+3      2            9
+4      3            5
+5      5            2
+6      7            6
